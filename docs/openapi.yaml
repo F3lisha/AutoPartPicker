@@ -1,0 +1,690 @@
+openapi: 3.0.3
+info:
+  title: PCPartPicker API
+  version: 1.0.0
+  description: |
+    REST API for the PCPartPicker prototype. The client must never access the Postgres/Supabase
+    database directly; all reads and writes go through this API. Each resource exposes standard
+    CRUD operations (create, read, update, delete) for the project’s tables.
+
+servers:
+  - url: http://localhost:3000
+    description: Local dev server
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      tags: [System]
+      responses:
+        '200':
+          description: API is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  # -------------------------
+  # USER PROFILES
+  # -------------------------
+  /user-profiles:
+    get:
+      summary: List user profiles
+      tags: [UserProfiles]
+      responses:
+        '200':
+          description: List of user profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserProfile'
+    post:
+      summary: Create a user profile
+      description: Creates an application-level profile for an existing auth user.
+      tags: [UserProfiles]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileCreate'
+      responses:
+        '201':
+          description: Created profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+
+  /user-profiles/{userId}:
+    get:
+      summary: Get a user profile by userId
+      tags: [UserProfiles]
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '404':
+          description: Profile not found
+    patch:
+      summary: Update a user profile
+      tags: [UserProfiles]
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserProfileUpdate'
+      responses:
+        '200':
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+    delete:
+      summary: Delete a user profile
+      tags: [UserProfiles]
+      parameters:
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  # -------------------------
+  # VEHICLES
+  # -------------------------
+  /vehicles:
+    get:
+      summary: List vehicles
+      tags: [Vehicles]
+      parameters:
+        - in: query
+          name: make
+          schema:
+            type: string
+          description: Filter by make (e.g., Toyota)
+        - in: query
+          name: model
+          schema:
+            type: string
+          description: Filter by model
+        - in: query
+          name: year
+          schema:
+            type: integer
+          description: Filter by year
+      responses:
+        '200':
+          description: List of vehicles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+    post:
+      summary: Create a vehicle
+      tags: [Vehicles]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCreate'
+      responses:
+        '201':
+          description: Created vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+  /vehicles/{vehicleId}:
+    get:
+      summary: Get vehicle by ID
+      tags: [Vehicles]
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      responses:
+        '200':
+          description: Vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+        '404':
+          description: Not found
+    patch:
+      summary: Update vehicle
+      tags: [Vehicles]
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleUpdate'
+      responses:
+        '200':
+          description: Updated vehicle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+    delete:
+      summary: Delete vehicle
+      tags: [Vehicles]
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  # -------------------------
+  # LISTINGS
+  # -------------------------
+  /listings:
+    get:
+      summary: List listings
+      tags: [Listings]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+          description: Filter by listing status (active, sold, etc.)
+        - in: query
+          name: source
+          schema:
+            type: string
+          description: Filter by source (dealer, private)
+      responses:
+        '200':
+          description: List of listings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Listing'
+    post:
+      summary: Create a listing
+      tags: [Listings]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListingCreate'
+      responses:
+        '201':
+          description: Created listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+
+  /listings/{listingId}:
+    get:
+      summary: Get listing by ID
+      tags: [Listings]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      responses:
+        '200':
+          description: Listing with related vehicle info
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+        '404':
+          description: Not found
+    patch:
+      summary: Update listing
+      tags: [Listings]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListingUpdate'
+      responses:
+        '200':
+          description: Updated listing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Listing'
+    delete:
+      summary: Delete listing
+      tags: [Listings]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  /listings/{listingId}/photos:
+    get:
+      summary: List photos for a listing
+      tags: [ListingPhotos]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      responses:
+        '200':
+          description: Photos for listing
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ListingPhoto'
+    post:
+      summary: Add a photo to a listing
+      tags: [ListingPhotos]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListingPhotoCreate'
+      responses:
+        '201':
+          description: Created photo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListingPhoto'
+
+  /listing-photos/{photoId}:
+    delete:
+      summary: Delete a listing photo
+      tags: [ListingPhotos]
+      parameters:
+        - $ref: '#/components/parameters/PhotoIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  /listings/{listingId}/condition:
+    get:
+      summary: Get vehicle condition for a listing
+      tags: [VehicleConditions]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      responses:
+        '200':
+          description: Condition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleCondition'
+        '404':
+          description: Not found
+    put:
+      summary: Upsert vehicle condition
+      tags: [VehicleConditions]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleConditionUpsert'
+      responses:
+        '200':
+          description: Updated/created condition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleCondition'
+
+  /listings/{listingId}/price-history:
+    get:
+      summary: List price history entries for a listing
+      tags: [PriceHistory]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      responses:
+        '200':
+          description: Price history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PriceHistoryEntry'
+    post:
+      summary: Add a price history entry
+      tags: [PriceHistory]
+      parameters:
+        - $ref: '#/components/parameters/ListingIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceHistoryCreate'
+      responses:
+        '201':
+          description: Created price history entry
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceHistoryEntry'
+
+  # -------------------------
+  # VEHICLE ALERTS & COMPATIBILITY
+  # -------------------------
+  /vehicles/{vehicleId}/alerts:
+    get:
+      summary: List alerts for a vehicle
+      tags: [VehicleAlerts]
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      responses:
+        '200':
+          description: Vehicle alerts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleAlert'
+    post:
+      summary: Create a vehicle alert
+      tags: [VehicleAlerts]
+      parameters:
+        - $ref: '#/components/parameters/VehicleIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleAlertCreate'
+      responses:
+        '201':
+          description: Created alert
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleAlert'
+
+  /compatibility-rules:
+    get:
+      summary: List compatibility rules
+      tags: [CompatibilityRules]
+      responses:
+        '200':
+          description: Rules list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CompatibilityRule'
+    post:
+      summary: Create a compatibility rule
+      tags: [CompatibilityRules]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompatibilityRuleCreate'
+      responses:
+        '201':
+          description: Created rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompatibilityRule'
+
+  /compatibility-rules/{ruleId}:
+    patch:
+      summary: Update a compatibility rule
+      tags: [CompatibilityRules]
+      parameters:
+        - $ref: '#/components/parameters/RuleIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompatibilityRuleUpdate'
+      responses:
+        '200':
+          description: Updated rule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompatibilityRule'
+    delete:
+      summary: Delete a compatibility rule
+      tags: [CompatibilityRules]
+      parameters:
+        - $ref: '#/components/parameters/RuleIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  # -------------------------
+  # CONVERSATIONS & MESSAGES
+  # -------------------------
+  /conversations:
+    get:
+      summary: List conversations
+      tags: [Conversations]
+      parameters:
+        - in: query
+          name: listingId
+          schema:
+            type: string
+            format: uuid
+          required: false
+        - in: query
+          name: userId
+          schema:
+            type: string
+            format: uuid
+          required: false
+          description: Return conversations where this user is buyer or seller
+      responses:
+        '200':
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Conversation'
+    post:
+      summary: Create a conversation
+      tags: [Conversations]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConversationCreate'
+      responses:
+        '201':
+          description: Created conversation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Conversation'
+
+  /conversations/{conversationId}/messages:
+    get:
+      summary: List messages in a conversation
+      tags: [Messages]
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+      responses:
+        '200':
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Message'
+    post:
+      summary: Send a message in a conversation
+      tags: [Messages]
+      parameters:
+        - $ref: '#/components/parameters/ConversationIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessageCreate'
+      responses:
+        '201':
+          description: Created message
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+
+  /messages/{messageId}:
+    delete:
+      summary: Delete a message
+      tags: [Messages]
+      parameters:
+        - $ref: '#/components/parameters/MessageIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  # -------------------------
+  # REVIEWS, REPORTS, BLOCKS, APPEALS
+  # -------------------------
+  /reviews:
+    get:
+      summary: List reviews
+      tags: [Reviews]
+      parameters:
+        - in: query
+          name: revieweeId
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Review'
+    post:
+      summary: Create a review
+      tags: [Reviews]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewCreate'
+      responses:
+        '201':
+          description: Created review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+
+  /reviews/{reviewId}:
+    patch:
+      summary: Update a review
+      tags: [Reviews]
+      parameters:
+        - $ref: '#/components/parameters/ReviewIdParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReviewUpdate'
+      responses:
+        '200':
+          description: Updated review
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Review'
+    delete:
+      summary: Delete a review
+      tags: [Reviews]
+      parameters:
+        - $ref: '#/components/parameters/ReviewIdParam'
+      responses:
+        '204':
+          description: Deleted
+
+  /reports:
+    get:
+      summary: List reports
+      tags: [Reports]
+      parameters:
+        - in: query
+          name: status
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Reports
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Report'
+    post:
+      summary: Create a report
+      tags: [Reports]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReportCreate'
+      responses:
+        '201':
+          description: Created report
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Report'
+
+  /reports/{reportId}:
+    patch:
+      summary: Update report status or details
+      tags: [Reports]
+      parameters:
+        - $ref: '#/components/parameters/ReportIdParam'
+      requestBody:

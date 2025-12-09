@@ -1,0 +1,13 @@
+// src/components/Layout.jsx
+import Navbar from "./Navbar";
+
+const Layout = ({ children }) => {
+  return (
+    <div className="app">
+      <Navbar />
+      <main className="container">{children}</main>
+    </div>
+  );
+};
+
+export default Layout;
